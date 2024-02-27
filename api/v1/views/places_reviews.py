@@ -6,17 +6,17 @@ from flask import abort, jsonify, request
 
 from api.v1.views import app_views
 from models import storage
-from models.city import City
+from models.review import Review
 
 
 @app_views.route("/places/<place_id>/reviews", methods=["GET"],
                  strict_slashes=False)
 def get_reviews(place_id):
     """Retrieves the list of all Review objects of a Place"""
-    review_obj = storage.get("Review", str(place_id))
-    if review_obj is None:
+    place_obj = storage.get("Place", str(place_id))
+    if place_obj is None:
         abort(404)
-    all_reviews = review_obj.cities
+    all_reviews = place_obj.reviews
     result = [review.to_dict() for review in all_reviews]
     return jsonify(result), 200
 
@@ -57,7 +57,7 @@ def create_review(place_id):
     if "user_id" not in review_json:
         abort(400, "Missing user_id")
     review_json["place_id"] = place_id
-    review_inst = City(**review_json)
+    review_inst = Review(**review_json)
     review_inst.save()
     return jsonify(review_inst.to_dict()), 201
 
@@ -65,7 +65,7 @@ def create_review(place_id):
 @app_views.route("/reviews/<review_id>", methods=["PUT"], strict_slashes=False)
 def update_review(review_id):
     """pdates a Review object"""
-    review_obj = storage.get("City", str(review_id))
+    review_obj = storage.get("Review", str(review_id))
     review_json = request.get_json(silent=True)
     if review_obj is None:
         abort(404)
